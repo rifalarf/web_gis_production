@@ -6,7 +6,7 @@ name: Build and deploy PHP app to Azure Web App - website-gis
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -33,6 +33,20 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true'
         run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
+      # --- NPM build (Vite) ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+      # ------------------------
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -42,23 +56,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: php-app
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B7A3DC2118FE45CAABE814EEB2DAE426 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99C44AF989934ECB8E0112ACAB56D786 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2B90A39910054D3891C789A07D228F62 }}
-
+      
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -66,3 +70,4 @@ jobs:
           app-name: 'website-gis'
           slot-name: 'Production'
           package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_2C156F81C9364632A7AB4096DBC087DD }}
