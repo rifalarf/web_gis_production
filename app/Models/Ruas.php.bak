@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Ruas extends Model
+{
+    protected $table = 'ruas';
+    protected $primaryKey = 'code';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = ['code', 'nm_ruas', 'panjang'];
+    protected $casts = [
+        'panjang' => 'float',
+    ];
+
+    public function segments(): HasMany
+    {
+        return $this->hasMany(Segment::class, 'ruas_code', 'code');
+    }
+
+    public function getPanjangAttribute($value)
+    {
+        return $value === null ? 0.0 : (float) $value;
+    }
+
+    public function toGeoJson(): array
+    {
+        return ['type' => 'FeatureCollection', 'features' => []];
+    }
+}
