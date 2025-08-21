@@ -114,7 +114,7 @@ const auth = usePage().props.auth
         </div>
 	<a
           v-if="auth?.user"
-          :href="/kerusakan/${prop.id ?? props.marker.id}/edit"
+          :href="`/kerusakan/${prop.id ?? props.marker.id}/edit`"
           class="mt-2 inline-block text-yellow-600 hover:underline text-sm"
        	>
           Edit
